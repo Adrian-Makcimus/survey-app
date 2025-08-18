@@ -69,7 +69,7 @@
         var toUsePhysioPaths_unhealthy = [];
 
         for (var ctr = 0; ctr < avail_IdsShuffled.length; ctr++){
-            var physiopath = 'data/physio_22_server/healthy_' + avail_IdsShuffled[ctr] + '.wav';
+            var physiopath = 'static/audio/healthy_' + avail_IdsShuffled[ctr] + '.wav';
             var thisPath = avail_IdsShuffled[ctr];
 
             thisTrialObj = {
@@ -81,7 +81,7 @@
         }
 
         for (var ctr = 0; ctr < avail_IdsShuffled.length; ctr++){
-            var physiopath_unhealthy = 'data/physio_22_server/unhealthy_' + avail_IdsShuffled[ctr] + '.wav';
+            var physiopath_unhealthy = 'static/audio/unhealthy_' + avail_IdsShuffled[ctr] + '.wav';
             thisTrialObj = {
                 PhysioPath: physiopath_unhealthy,
                 ID: thisPath+ toUsePhysioPaths_healthy.length
@@ -163,7 +163,7 @@
 
         console.log(toUseNTNPaths);
 
-
+    /*
         $.ajax({
             url: "questions/qn.csv",
             async: false,
@@ -175,7 +175,7 @@
                 console.log("CSV Loading Complete");
             }
         });
-
+    */   
 
         /* define welcome message trial */
         var welcome = {
