@@ -11,4 +11,95 @@
     <h1>Survey Loading…</h1>
     <script src="{{ url_for('static', filename='js/experiment.js') }}"></script>
   </body>
+
+  <script> 
+    const jsPsych = initJsPsych({
+      on_finish: function() {
+        // Send final data to Flask backend
+        fetch("/submit", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(jsPsych.data.get().values())
+        }).then(() => {
+          window.location = "/done";
+        });
+      }
+    });
+
+    var timeline = []; // Initialize timeline
+    
+    var welcome = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: '<h1> Welcome to the survey!</h1> Please press space bar to continue.',
+      choices: [" "]
+    };
+
+    timeline.push(welcome);
+
+    var background_trial = {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `
+      <div class="justify">
+        <p><b>Background:</b> We are a research lab ...</p>
+        <p><b>Important:</b> Please use Google Chrome.</p>
+      </div>`,
+      choices: ['Continue']
+    };
+    timeline.push(background_trial);
+
+    var instructions = {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `
+      <div class="justify">
+        <p>Requirements to participate:</p>
+        <ol>
+          <li>You are a native English speaker in the US.</li>
+          <li>You have headphones or loud enough speakers.</li>
+          <li>You are a medical professional.</li>
+        </ol>
+        <p>Survey should take ~20 minutes. Do not refresh the page.</p>
+      </div>`,
+      choices: ['Continue']
+    };
+    timeline.push(instructions);
+
+    var collect_data = {
+      type: jsPsychSurveyText,
+      questions: [
+        { prompt: 'What is your specialty?', required: false, name: 'specialty' },
+        { prompt: 'How long have you been a licensed physician?', required: false, name: 'time_licensed' },
+        { prompt: 'Your name (optional)', required: false, name: 'name' }
+      ],
+      preamble: ['Please fill out the basic details below to continue.'],
+      on_finish: function(data){
+        const response = data.response;
+        const surveyer_name = response.name;
+        const time_licensed = response.time_licensed;
+        const specialty = response.specialty;
+
+        // Create timestamped filename
+        function pad(n){ return n<10 ? '0'+n : n; }
+        var date = new Date();
+        var fileName = `${date.getFullYear()}${pad(date.getMonth()+1)}${pad(date.getDate())}_${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}_${specialty}_${time_licensed}`;
+        console.log(fileName);
+
+        // Send data to Flask backend
+        fetch("/submit", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(jsPsych.data.get().values())
+        });
+      }
+    };
+    timeline.push(collect_data);
+
+    // Run the experiment
+    jsPsych.run(timeline);
+
+
+
+
+  </script>
+
+  
 </html>
