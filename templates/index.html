@@ -1,105 +1,654 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>Test Survey</title>
-    <script src="https://unpkg.com/jspsych@7/dist/jspsych.js"></script>
-    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2"></script>
-    <link rel="stylesheet" href="https://unpkg.com/jspsych@7/dist/css/jspsych.css">
-  </head>
-  <body>
-    <h1>Survey Loading…</h1>
-    <script src="{{ url_for('static', filename='js/experiment.js') }}"></script>
-  </body>
+<!DOCTYPE html>
+<html>
+    <head>
+      <script src="{{ url_for('static', filename='jspsych/jspsych.js') }}"></script>
+      <script src="{{ url_for('static', filename='jspsych/plugin-html-keyboard-response.js') }}"></script>
+      <script src="{{ url_for('static', filename='jspsych/plugin-html-button-response.js') }}"></script>
+      <script src="{{ url_for('static', filename='jspsych/plugin-audio-keyboard-response.js') }}"></script>
+      <script src="{{ url_for('static', filename='jspsych/plugin-video-keyboard-response.js') }}"></script>
+      <script src="{{ url_for('static', filename='jspsych/plugin-preload.js') }}"></script>
+      <script src="{{ url_for('static', filename='jspsych/plugin-survey-multi-choice.js') }}"></script>
+      <script src="{{ url_for('static', filename='jspsych/plugin-survey-text.js') }}"></script>
+      <script src="{{ url_for('static', filename='jspsych/plugin-survey-likert.js') }}"></script>
+      <script src="{{ url_for('static', filename='jspsych/plugin-instructions.js') }}"></script>
+      
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+      <script src="{{ url_for('static', filename='jquery-csv/jquery.csv.js') }}"></script>
+      
+      <link href="{{ url_for('static', filename='jspsych/jspsych.css') }}" rel="stylesheet" type="text/css" />
+      
+    </head>
+    <style>
+        div.justify {
+            text-align: justify;
+            padding: 10%;
+            }
+    </style>
+    <body></body>
+    <script>
 
-  <script> 
-    const jsPsych = initJsPsych({
-      on_finish: function() {
-        // Send final data to Flask backend
-        fetch("/submit", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify(jsPsych.data.get().values())
-        }).then(() => {
-          window.location = "/done";
+        function saveData(filename, data){
+            console.log('I am here.')
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'write_data.php'); 
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({filedata: data, fileName: fileName}));
+            console.log({filedata: data, fileName: fileName});
+            
+        }
+
+        /* initialize jsPsych */
+        var jsPsych = initJsPsych({
+            show_progress_bar: true,
+            on_finish: function(){
+                saveDataToCSV("PCG_survey_data.csv");
+
+                 //jsPsych.data.displayData();
+            }
         });
-      }
-    });
 
-    var timeline = []; // Initialize timeline
-    
-    var welcome = {
-      type: jsPsychHtmlKeyboardResponse,
-      stimulus: '<h1> Welcome to the survey!</h1> Please press space bar to continue.',
-      choices: [" "]
-    };
 
-    timeline.push(welcome);
+        /* create timeline */
+        var timeline = [];
 
-    var background_trial = {
-      type: jsPsychHtmlButtonResponse,
-      stimulus: `
-      <div class="justify">
-        <p><b>Background:</b> We are a research lab ...</p>
-        <p><b>Important:</b> Please use Google Chrome.</p>
-      </div>`,
-      choices: ['Continue']
-    };
-    timeline.push(background_trial);
 
-    var instructions = {
-      type: jsPsychHtmlButtonResponse,
-      stimulus: `
-      <div class="justify">
-        <p>Requirements to participate:</p>
-        <ol>
-          <li>You are a native English speaker in the US.</li>
-          <li>You have headphones or loud enough speakers.</li>
-          <li>You are a medical professional.</li>
-        </ol>
-        <p>Survey should take ~20 minutes. Do not refresh the page.</p>
-      </div>`,
-      choices: ['Continue']
-    };
-    timeline.push(instructions);
 
-    var collect_data = {
-      type: jsPsychSurveyText,
-      questions: [
-        { prompt: 'What is your specialty?', required: false, name: 'specialty' },
-        { prompt: 'How long have you been a licensed physician?', required: false, name: 'time_licensed' },
-        { prompt: 'Your name (optional)', required: false, name: 'name' }
-      ],
-      preamble: ['Please fill out the basic details below to continue.'],
-      on_finish: function(data){
-        const response = data.response;
-        const surveyer_name = response.name;
-        const time_licensed = response.time_licensed;
-        const specialty = response.specialty;
+        var avail_Ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 
+                 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 
+                 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 
+                 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 
+                 40, 41, 42, 43, 44, 45, 46, 47, 48, 49];
 
-        // Create timestamped filename
-        function pad(n){ return n<10 ? '0'+n : n; }
+        console.log(avail_Ids);
+        console.log(avail_Ids.length);
+
+        var avail_IdsShuffled = jsPsych.randomization.shuffle(avail_Ids);
+        console.log(avail_IdsShuffled);
+
+        var toUsePhysioPaths_healthy = [];
+        var toUsePhysioPaths_unhealthy = [];
+
+        for (var ctr = 0; ctr < avail_IdsShuffled.length; ctr++){
+            var physiopath = 'data/physio_22_server/healthy_' + avail_IdsShuffled[ctr] + '.wav';
+            var thisPath = avail_IdsShuffled[ctr];
+
+            thisTrialObj = {
+                PhysioPath: physiopath,
+                ID: thisPath
+            }
+
+            toUsePhysioPaths_healthy.push(thisTrialObj)
+        }
+
+        for (var ctr = 0; ctr < avail_IdsShuffled.length; ctr++){
+            var physiopath_unhealthy = 'data/physio_22_server/unhealthy_' + avail_IdsShuffled[ctr] + '.wav';
+            thisTrialObj = {
+                PhysioPath: physiopath_unhealthy,
+                ID: thisPath+ toUsePhysioPaths_healthy.length
+            }   
+        
+            toUsePhysioPaths_unhealthy.push(thisTrialObj)
+        }
+
+
+        var max_samples = 1; // Define your max_samples variable
+        var sample_count = 0;
+
+        var test_stimuli_all= [];
+
+        for (var ctr = 0; ctr < toUsePhysioPaths_healthy.length && sample_count < max_samples; ctr ++){
+            to_add_obj = {stimulus: toUsePhysioPaths_healthy[ctr].PhysioPath, 
+                        ID: toUsePhysioPaths_healthy[ctr].PhysioPath,
+                        };
+            test_stimuli_all.push(to_add_obj);
+            sample_count++;
+        };
+
+        for (var ctr = 0; ctr < toUsePhysioPaths_unhealthy.length && sample_count < max_samples*2; ctr ++){
+            to_add_obj = {stimulus: toUsePhysioPaths_unhealthy[ctr].PhysioPath, 
+                        ID: toUsePhysioPaths_unhealthy[ctr].PhysioPath,
+                        };
+            test_stimuli_all.push(to_add_obj);
+            sample_count++;
+        };
+
+
+        test_stimuli_all = jsPsych.randomization.shuffle(test_stimuli_all);
+
+
+        var test_stimuli = [];
+
+        for (var ctr = 0; ctr < test_stimuli_all.length; ctr ++){
+            to_add_obj = {stimulus: test_stimuli_all[ctr].stimulus, 
+                          ID: test_stimuli_all[ctr].ID,
+                          displyTrialCTR: ctr + 1
+                        };
+            test_stimuli.push(to_add_obj);
+        };
+
+        console.log(test_stimuli);
+
+
+        
+        
+        
+        var availNTNs =  [1, 2, 3, 4, 7, 9, 11, 12, 13, 14, 15, 16, 18, 19, 21, 22, 23, 24, 25, 30];    // Array.from({length: 45}, (_, i) => i + 1); // [1, 2, ..., 45]       
+        console.log(availNTNs);
+        console.log(availNTNs.length);
+        var availNTNsShuffled = jsPsych.randomization.shuffle(availNTNs);
+        // availNTNsShuffled = availNTNsShuffled.slice(0, 2);
+        console.log(availNTNsShuffled);
+
+        /* Choose 4 NTNs for localization test */
+        // var locNTSShuffled = jsPsych.randomization.shuffle(availNTNs);
+        // var locNTSShuffled = locNTSShuffled.slice(0, 4);
+        var locNTSShuffled = [1, 5, 7, 9];
+        console.log(locNTSShuffled);
+        var correctAnswers = ["Right", "Left", "Left", "Right"];
+        var correctAnswersCount = 0;
+        
+        var toUseNTNPaths = [];
+
+        for (var ctr = 0; ctr < availNTNsShuffled.length; ctr ++){
+            var thisNTNPath = 'AV_Stitched_MAXSUP_9_dB/Trial_NTN_' + availNTNsShuffled[ctr] + '.mp4';
+            var thisNTN = availNTNsShuffled[ctr];
+
+            thisTrialObj = {
+                NTNPath: thisNTNPath,
+                NTN: thisNTN
+            }
+
+            toUseNTNPaths.push(thisTrialObj);
+        };
+
+        console.log(toUseNTNPaths);
+
+
+        $.ajax({
+            url: "questions/qn.csv",
+            async: false,
+            success: function (csvd) {
+            qnData = $.csv.toArrays(csvd);
+            },
+            dataType: "text",
+            complete: function () {
+                console.log("CSV Loading Complete");
+            }
+        });
+
+
+        /* define welcome message trial */
+        var welcome = {
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: '<h1> Welcome to the survey!</h1> Please press space bar to continue.',
+            choices: " "
+        };
+
+        timeline.push(welcome); // Adding this to the timeline of the exeriment
+
+
+        /* define background trial */
+        var background_trial = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `
+            <div class="justify">
+            <p><b>Background:</b> We are a research lab working to help create better machine learning tools for detecting heart murmurs and arrythmias .</p>
+            This survey is aimed at evaluating and distinguishing between healthy and pathological heart sounds that are generated by machine learning models. As part of ongoing research in cardiology, this survey presents both real and generated phonocardiograms (PCGs) for your expert assessment.
+            <p><b>Important:</b> Please make sure that you open this survey in <b>Google Chrome</b> browser. If you are using a different browser, please switch now.</p>  
+            </div>`,
+            choices: ['Continue'],
+            // post_trial_gap: 500
+        };
+
+        timeline.push(background_trial); // Adding this to the timeline of the exeriment
+
+        /* define instructions trial */
+        var instructions = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `
+            <div class="justify">
+            <p>In order to participate in this survey, you must meet the following requirements:</p>
+            <ol>
+                <li>You are a native speaker of American English based in the US.</li>
+                <li>You have a pair of <b>earphones/headphones</b> or a loud enugh speaker that you can use throughout the survey to listen to phonocardiogram signals at a comfortable volume.</li>
+                <li>You are a medical professional working in the field.</li>
+            </ol>
+            <p>The survey should take a maximum of 20 minutes to complete. It is also important that you <b>finish the survey in one attempt without refreshing the page.</b></p> </div>
+            `,
+            choices: ['Continue'],
+            // post_trial_gap: 500
+        };
+
+        timeline.push(instructions); // Adding this to the timeline of the exeriment
+
+
+        /* some important variables */
+        var workerID;
+        var surveyer_name;
+        var time_licensed;
+        var specialty;
         var date = new Date();
-        var fileName = `${date.getFullYear()}${pad(date.getMonth()+1)}${pad(date.getDate())}_${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}_${specialty}_${time_licensed}`;
-        console.log(fileName);
+        var fileName;
 
-        // Send data to Flask backend
-        fetch("/submit", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify(jsPsych.data.get().values())
+
+
+        /* collec the workers data */
+        var collect_data = {
+            type: jsPsychSurveyText,
+            questions: [{
+                prompt: 'What is your specialty?',
+                required: false,
+                name: 'specialty'
+            },
+            {
+                prompt: 'How long have you been a licensed physician',
+                required: false,
+                name: 'time_licensed'
+            },
+            { 
+            prompt: '<div style="max-width: 500px;">Your name (optional) <p> <i> Feel free to share your name if you would like to be acknowledged for your contribution. This is completely optional and will not affect your responses in any way.</i></p></div>',
+            required: false,
+            name: 'name'
+
+            }
+
+        ],
+            preamble: ['Please fill out the basic details below to continue.'],
+            on_finish: function(data){
+
+                surveyer_name = data.response.name
+                time_licensed = data.response.time_licensed
+                specialty = data.response.specialty
+                // Helper function to pad numbers with leading zeros
+                function pad(n) {
+                return n < 10 ? '0' + n : n;
+                }
+
+                var date = new Date();
+                var fileName = `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}_${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}_${specialty}_${time_licensed}`;
+
+                console.log(fileName)
+                saveData(fileName, jsPsych.data.get().json());
+            }
+        };
+
+        timeline.push(collect_data); // Adding this to the timeline of the experiment
+
+
+
+        var task_instruction_trial = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `
+            <div style="text-align: center; max-width: 600px; margin: 0 auto;"> 
+                There are a total of <b>20</b> trials in this survey. Each trial consists of a single phonocardiogram (PCG) audio.<br><br>
+                You are allowed to listen to the signal as many times as you need.
+            </div>
+            `,
+            choices: ['Continue'],
+            // post_trial_gap: 500
+        };
+
+        timeline.push(task_instruction_trial);
+
+
+        // for (var ctr = 0; ctr < task_instructions_stimuli.length; ctr ++){
+
+        //     var preload_img = {
+        //         type: jsPsychPreload,
+        //         Image: "img/" + task_instructions_imgs[ctr],
+        //         show_progress_bar: false
+        //     };
+
+        //     timeline.push(preload_img);
+
+        //     var temp_instructions_test = {
+        //         type: jsPsychHtmlButtonResponse,
+        //         stimulus: `
+        //         <p> ${task_instructions_stimuli[ctr]} </p>
+        //         <img src="img/${task_instructions_imgs[ctr]}" width = 60%>
+        //         `,
+        //         choices: ['Continue']
+        //     };
+
+        //     timeline.push(temp_instructions_test);
+
+        // }
+
+        /* Final task instruction */
+        var task_instructions_final = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `
+            <div class="justify">
+                <center><p> After each trial, you will be asked questions about the Each trial will ask you questions about the nature of the PCG. </p>
+                </center>
+and has a text box for annotationg what you hear in the PCG (arrythmia, systolic murmur, I/VI grading, aeortic stenosis, etc.)
+                <ul>
+                    <li><b>Question 1. </b> Was the PCG <b>healthy</b> or <b>pathological?</b> </li>
+                    <li><b>Question 2. </b> How confident are you that your answer <b>("healthy" or "pathological")</b> is correct?<br><i>(1 = Not at all confident, 5 = Extremely confident)</i></li>
+                    <li><b>Question 3. </b> Please briefly describe the nature of the abnormality or the reason for your uncertainty. <br> <i> (e.g., arrhythmia, systolic murmur, I/VI murmur grading, aortic stenosis, etc.)</i> </li>
+                </ul>
+
+            </div>
+            `,
+            choices: ['Continue'],
+            // post_trial_gap: 500
+        };
+
+        timeline.push(task_instructions_final); // Adding this to the timeline of the exeriment
+        
+        /* wear headphone instruction trial */
+        var wear_headphone_instruction = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `
+                <p>Please wear <b>earphones/headphones</b>. The survey starts after pressing Continue.</p>`,
+            choices: ['Continue'],
+            // post_trial_gap: 500
+        };
+
+        timeline.push(wear_headphone_instruction); // Adding this to the timeline of the exeriment
+
+
+
+
+        
+        /* Phase 1 - Pre-loading */
+        var preload = {
+            type: jsPsychPreload,
+            video: jsPsych.timelineVariable('stimulus'),
+            show_progress_bar: false
+        };
+
+        var play_audio = {
+            type: jsPsychSurveyLikert,
+            questions: [
+                {
+                    prompt: function() {
+                        var trialCTR = jsPsych.timelineVariable('displyTrialCTR');
+                        var audioPath = jsPsych.timelineVariable('stimulus');
+                        return `
+                        <p style="text-align: center;">Trial ${trialCTR} of 20</p>
+                        <div id="audio-container" style="width: 100%; text-align: center;">
+                            <audio id="audio" preload="auto"></audio>
+                            <div style="width: 500px; margin: 0 auto;">
+                                <div id="audio-progress-bar" style="width: 100%; height: 20px; background-color: #ccc; border-radius: 10px;">
+                                    <div id="audio-progress" style="width: 0%; height: 20px; background-color: #4CAF50; border-radius: 10px;"></div>
+                                </div>
+                                <button id="play-button" type="button" style="margin-bottom: 20px;">Play Audio</button>
+                            </div>
+                        </div>
+                        <p>Is the PCG <b>healthy</b> or <b>pathological</b> ?</p>
+                        `;
+                    },
+                    labels: ["Healthy", "Pathological", "Unknown"],
+                    required: false,
+                    name: function() {
+                        return 'PCG_classification' + jsPsych.timelineVariable('displyTrialCTR');
+                    }
+                },
+                {
+                    prompt: `<p>How confident are you in your previous answer?</p>`,
+                    labels: ["<b>1.</b> Not at all confident", "<b>2.</b> Slightly confident", "<b>3.</b> Moderately confident", "<b>4.</b> Very confident", "<b>5.</b> Extremely confident"],
+                    required: false,
+                    name: function() {
+                        return 'Classification_confidence' + jsPsych.timelineVariable('displyTrialCTR');
+                    }
+                }
+            ],
+            on_load: function() {
+                // Wait a moment to ensure DOM is ready
+                setTimeout(function() {
+                    var audioPath = jsPsych.timelineVariable('stimulus');
+                    var audio = document.getElementById("audio");
+                    var progressBar = document.getElementById("audio-progress");
+                    var playButton = document.getElementById("play-button");
+                    var nextButton = document.querySelector("button.jspsych-btn");
+
+                    audio.src = audioPath;
+                    audio.load();
+
+                    // Disable Next initially
+                    nextButton.disabled = true;
+
+                    // Play button
+                    playButton.addEventListener("click", function() {
+                        audio.play();
+                        playButton.disabled = true; // optional: prevent replay
+                    });
+
+                    // Update progress bar
+                    audio.addEventListener("timeupdate", function() {
+                        if (audio.duration > 0) {
+                            var progress = (audio.currentTime / audio.duration) * 100;
+                            progressBar.style.width = progress + "%";
+                        }
+                    });
+
+                    // Enable Next when audio ends
+                    audio.addEventListener("ended", function() {
+                        progressBar.style.width = "100%";
+                        nextButton.disabled = false;
+                    });
+                }, 50);
+            }
+        };
+
+
+
+////////
+
+
+        var play_audio_free_response = {
+            type: jsPsychSurveyText,
+            questions: [
+                {
+                prompt: function() {
+                    var trialCTR = jsPsych.timelineVariable('displyTrialCTR');
+                    var audioPath = jsPsych.timelineVariable('stimulus');
+                    return `
+                    <p style="text-align: center;">Trial ${trialCTR} of 20</p>
+                    <div id="audio-container" style="width: 100%; text-align: center;">
+                        <audio id="audio" src=""></audio>
+                        <div style="width: 500px; margin: 0 auto;">
+                        <div id="audio-progress-bar" style="width: 100%; height: 20px; background-color: #ccc; border-radius: 10px;">
+                            <div id="audio-progress" style="width: 0%; height: 20px; background-color: #4CAF50; border-radius: 10px;"></div>
+                        </div>
+                        <button id="play-button" style="margin-bottom: 20px;">Play Audio</button>
+                        </div>
+                    </div>
+                    <p>Please describe what you hear in the audio (you may respond with none):</p>
+                    `;
+                },
+                rows: 5,
+                columns: 50,
+                required: true,
+                name: function(){
+                    var toReturn = 'Audio_description' + jsPsych.timelineVariable('displyTrialCTR');
+                    return toReturn;
+                }
+                }
+            ],
+            on_load: function() {
+                var audioPath = jsPsych.timelineVariable('stimulus');
+                var audio = document.getElementById("audio");
+                var progressBar = document.getElementById("audio-progress");
+
+                audio.src = audioPath;
+
+                document.getElementById("play-button").addEventListener("click", function() {
+                audio.play();
+                });
+
+                audio.addEventListener("timeupdate", function() {
+                var progress = (audio.currentTime / audio.duration) * 100;
+                progressBar.style.width = progress + "%";
+                });
+
+                audio.addEventListener("ended", function() {
+                progressBar.style.width = "0%";
+                });
+            }
+        };
+
+
+
+
+
+               // /* Phase 6 - Natrualness of the voices heard */
+        // var natRating_task = {
+        //     type: jsPsychSurveyMultiChoice,
+        //     questions: [{
+        //         prompt: 'Please rate the quality of the voices of the talkers.',
+        //         options: ['1 (Bad)', '2 (Poor)', '3 (Fair)', '4 (Good)', '5 (Excellent)'],
+        //         required: true,
+        //         name: function(){
+        //             var toReturn = 'NatRating_Qn_PTN_' + jsPsych.timelineVariable('NTN');
+        //             return toReturn;
+        //         }  
+        //     }],
+        //     on_finish: function(){
+        //         saveData(workerID, jsPsych.data.get().json());
+        //     }   
+        // }
+
+
+
+        /* Phase 3 - Likert Survey 
+        var likert_survey = {
+            type: jsPsychSurveyLikert,
+            questions: [{   prompt: "Which part was more <b>difficult</b> to follow?", 
+                            labels: ["<b>1</b>", "Somewhat <b>1</b>", "No difference", "Somewhat <b>2</b>", "<b>2</b>"], 
+                            required: true,
+                            name: function(){
+                                    var toReturn = 'DiffRating_Qn_NTN_' + jsPsych.timelineVariable('NTN');
+                                    return toReturn;
+                                    }}, 
+                        {   prompt: "Which part did you <b>prefer</b> listening to?", 
+                            labels: ["<b>1</b>", "Somewhat <b>1</b>", "No preference", "Somewhat <b>2</b>", "<b>2</b>"], 
+                            required: true,
+                            name: function(){
+                                    var toReturn = 'PrefRating_Qn_NTN_' + jsPsych.timelineVariable('NTN');
+                                    return toReturn;
+                                    }}
+                        ],
+            scale_width: 750
+        };*/
+
+
+
+
+ 
+
+        /* Create a test procedure */
+        var test_procedure = {
+            timeline: [preload, play_audio,play_audio_free_response], 
+            timeline_variables: test_stimuli
+        }
+
+        timeline.push(test_procedure);
+
+        /* Final question */
+        var final_question = {
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `<p>In some of the portions of the trials that you listened to, a system was turned on that tried to enhance the followed conversation. It is not perfect, and may have sometimes enhanced the incorrect conversation. Would you prefer to have this system turned on or turned off?</p>`,
+            choices: ['On', 'Off'],
+            on_finish: function(){
+                saveData(workerID, jsPsych.data.get().json());
+            }
+            // post_trial_gap: 500
+        }; 
+
+        //timeline.push(final_question); // Adding this to the timeline of the exeriment
+
+        /* Code display 
+        var final_code = {
+            type: jsPsychInstructions,
+            pages: [`<p>You have finished the survey. Please enter the code: CSZYIV1F in the MTurk page. You may exit the page after entering the code. <br>Thank you for participating!</p>`],
+            show_clickable_nav: false
+        };
+
+        timeline.push(final_code); // Adding this to the timeline of the exeriment
+        */
+        
+        
+        /* start the experiment */
+        jsPsych.run(timeline); // Start the experiment
+
+
+
+
+        jsPsych.run(timeline);
+
+        jsPsych.onFinish(function() {
+            // Grab jsPsych data
+            var dataJSON = jsPsych.data.get().json();
+
+            // Build payload for PHP script
+            var payload = {
+                filedata: dataJSON,
+                fileName: 'PCG_' + Date.now() // unique filename
+            };
+
+            // Send to PHP
+            fetch("save_data.php", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.text())
+            .then(result => {
+                console.log("✅ Data saved:", result);
+                alert("Thank you! Your responses have been saved.");
+            })
+            .catch(error => {
+                console.error("❌ Error saving data:", error);
+                alert("There was an error saving your responses.");
+            });
         });
-      }
-    };
-    timeline.push(collect_data);
-
-    // Run the experiment
-    jsPsych.run(timeline);
 
 
 
+    function saveDataToCSV(filename) {
+        // Get all jsPsych data as JSON
+        var data = jsPsych.data.get().json();
 
-  </script>
+        // Convert JSON to array of objects
+        var jsonData = JSON.parse(data);
 
-  
+        // Convert JSON array to CSV using jquery.csv.js
+        var csvData = $.csv.fromObjects(jsonData);
+
+        // Create a blob and trigger download
+        var blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement("a");
+        if (link.download !== undefined) { // feature detection
+            var url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+
+
+        
+        function saveData(workerID, data){
+            console.log('I am here.')
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'write_data.php'); // 'write_data.php' is the path to the php file described above.
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({filedata: data, MTurkWorkerID: workerID}));
+            console.log({filedata: data, MTurkWorkerID: workerID});
+        }
+
+        
+        // For deployment
+        // 1. Undo trial slicing
+        // 2. Set response_ends_trial = false
+        // 3. Have the subject forward the CSV file?
+
+    </script>
 </html>
