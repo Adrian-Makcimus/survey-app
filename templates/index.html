@@ -69,7 +69,7 @@
         var toUsePhysioPaths_unhealthy = [];
 
         for (var ctr = 0; ctr < avail_IdsShuffled.length; ctr++){
-            var physiopath = 'static/audio/healthy_' + avail_IdsShuffled[ctr] + '.wav';
+            var physiopath = 'static/audio/physio/healthy_' + avail_IdsShuffled[ctr] + '.wav';
             var thisPath = avail_IdsShuffled[ctr];
 
             thisTrialObj = {
@@ -81,7 +81,7 @@
         }
 
         for (var ctr = 0; ctr < avail_IdsShuffled.length; ctr++){
-            var physiopath_unhealthy = 'static/audio/unhealthy_' + avail_IdsShuffled[ctr] + '.wav';
+            var physiopath_unhealthy = 'static/audio/physio/unhealthy_' + avail_IdsShuffled[ctr] + '.wav';
             thisTrialObj = {
                 PhysioPath: physiopath_unhealthy,
                 ID: thisPath+ toUsePhysioPaths_healthy.length
@@ -89,9 +89,10 @@
         
             toUsePhysioPaths_unhealthy.push(thisTrialObj)
         }
+        
 
 
-        var max_samples = 2; // Define your max_samples variable ideally --> 5
+        var max_samples = 5; // Define your max_samples variable ideally --> 5
         var sample_count = 0; // counter
 
         var test_stimuli_all= [];
@@ -113,9 +114,97 @@
             sample_count++;
         };
 
+
+
+
+
+
+
+
+
         // TODO: ADD Generated and VEO datasets here to the test stimuli selection
+        var veo_ids = ['healthy_0', 'healthy_2','healthy_3', 'healthy_4','holosystolic_2','holosystolic_4','holosystolic_5','prompt4_2','prompt4_3','prompt4_5','prompt4_7','unhealthy_0','unhealthy_2','unhealthy_3','unhealthy_4','unhealthy_5']
+
+        console.log(veo_ids);
+        console.log(veo_ids.length);
+
+        var veo_idsShuffled = jsPsych.randomization.shuffle(veo_ids);
+        console.log(veo_idsShuffled);
+
+        var toUseVeoPaths= [];
+
+        for (var ctr = 0; ctr < veo_idsShuffled.length; ctr++){
+            var physiopath = 'static/audio/veo-3/veo_' + veo_idsShuffled[ctr] + '.wav';
+            var thisPath = veo_idsShuffled[ctr];
+
+            thisTrialObj = {
+                PhysioPath: physiopath,
+                ID: thisPath
+            }
+
+            toUseVeoPaths.push(thisTrialObj)
+        }
+
+        for (var ctr = 0; ctr < toUseVeoPaths.length && sample_count < max_samples*3; ctr ++){
+            to_add_obj = {stimulus: toUseVeoPaths[ctr].PhysioPath, 
+                        ID: toUseVeoPaths[ctr].PhysioPath,
+                        };
+            test_stimuli_all.push(to_add_obj);
+            sample_count++;
+        };
 
 
+        // ADD Generated Heart Sounds
+        var avail_genIds = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 
+                 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 
+                 20, 21, 22, 23, 24];
+
+        console.log(avail_genIds);
+        console.log(avail_genIds.length);
+
+        var gen_idsShuffled = jsPsych.randomization.shuffle(avail_genIds);
+        console.log(gen_idsShuffled);
+
+        var toUseGenPaths_healthy= [];
+        var toUseGenPaths_unhealthy= [];
+
+        for (var ctr = 0; ctr < gen_idsShuffled.length; ctr++){
+            var physiopath = 'static/audio/generated-v1/healthy_' + gen_idsShuffled[ctr] + '.wav';
+            var thisPath = gen_idsShuffled[ctr];
+
+            thisTrialObj = {
+                PhysioPath: physiopath,
+                ID: thisPath
+            }
+
+            toUseGenPaths_healthy.push(thisTrialObj)
+        }
+        for (var ctr = 0; ctr < gen_idsShuffled.length; ctr++){
+            var physiopath = 'static/audio/generated-v1/unhealthy_' + gen_idsShuffled[ctr] + '.wav';
+            var thisPath = gen_idsShuffled[ctr];
+
+            thisTrialObj = {
+                PhysioPath: physiopath,
+                ID: thisPath
+            }
+
+            toUseGenPaths_unhealthy.push(thisTrialObj)
+        }
+
+
+        for (var ctr = 0; ctr < toUseGenPaths_unhealthy.length && sample_count < max_samples*5; ctr ++){
+            to_add_obj = {stimulus: toUseGenPaths_unhealthy[ctr].PhysioPath, 
+                        ID: toUseGenPaths_unhealthy[ctr].PhysioPath,
+                        };
+            test_stimuli_all.push(to_add_obj);
+            sample_count++;
+        };
+
+
+
+
+
+        //Randomize all trials
         test_stimuli_all = jsPsych.randomization.shuffle(test_stimuli_all);
 
 
@@ -130,56 +219,12 @@
         };
 
         console.log(test_stimuli);
+        console.log(test_stimuli.length);
 
 
         
+
         
-        /*
-        var availNTNs =  [1, 2, 3, 4, 7, 9, 11, 12, 13, 14, 15, 16, 18, 19, 21, 22, 23, 24, 25, 30];    // Array.from({length: 45}, (_, i) => i + 1); // [1, 2, ..., 45]       
-        console.log(availNTNs);
-        console.log(availNTNs.length);
-        var availNTNsShuffled = jsPsych.randomization.shuffle(availNTNs);
-        // availNTNsShuffled = availNTNsShuffled.slice(0, 2);
-        console.log(availNTNsShuffled);
-
-         Choose 4 NTNs for localization test 
-        // var locNTSShuffled = jsPsych.randomization.shuffle(availNTNs);
-        // var locNTSShuffled = locNTSShuffled.slice(0, 4);
-
-        var locNTSShuffled = [1, 5, 7, 9];
-        console.log(locNTSShuffled);
-        var correctAnswers = ["Right", "Left", "Left", "Right"];
-        var correctAnswersCount = 0;
-        
-        var toUseNTNPaths = [];
-
-        for (var ctr = 0; ctr < availNTNsShuffled.length; ctr ++){
-            var thisNTNPath = 'AV_Stitched_MAXSUP_9_dB/Trial_NTN_' + availNTNsShuffled[ctr] + '.mp4';
-            var thisNTN = availNTNsShuffled[ctr];
-
-            thisTrialObj = {
-                NTNPath: thisNTNPath,
-                NTN: thisNTN
-            }
-
-            toUseNTNPaths.push(thisTrialObj);
-        };
-
-        console.log(toUseNTNPaths);
-    */
-    /*
-        $.ajax({
-            url: "questions/qn.csv",
-            async: false,
-            success: function (csvd) {
-            qnData = $.csv.toArrays(csvd);
-            },
-            dataType: "text",
-            complete: function () {
-                console.log("CSV Loading Complete");
-            }
-        });
-    */   
 
         /* define welcome message trial */
         var welcome = {
@@ -345,8 +390,9 @@ and has a text box for annotationg what you hear in the PCG (arrythmia, systolic
                     prompt: function() {
                         var trialCTR = jsPsych.timelineVariable('displyTrialCTR');
                         var audioPath = jsPsych.timelineVariable('stimulus');
+                        var total_stim = test_stimuli.length;
                         return `
-                        <p style="text-align: center;">Trial ${trialCTR} of 20</p>
+                        <p style="text-align: center;">Trial ${trialCTR} of ${total_stim}</p>
                         <div id="audio-container" style="width: 100%; text-align: center;">
                             <audio id="audio" preload="auto"></audio>
                             <div style="width: 500px; margin: 0 auto;">
@@ -411,9 +457,9 @@ and has a text box for annotationg what you hear in the PCG (arrythmia, systolic
                 {
                 prompt: function() {
                     var trialCTR = jsPsych.timelineVariable('displyTrialCTR');
-                    var audioPath = jsPsych.timelineVariable('stimulus');
-                    return `
-                    <p style="text-align: center;">Trial ${trialCTR} of 20</p>
+                    var total_stim = test_stimuli.length;
+                        return `
+                        <p style="text-align: center;">Trial ${trialCTR} of ${total_stim}</p>
                     <div id="audio-container" style="width: 100%; text-align: center;">
                         <audio id="audio" src=""></audio>
                         <div style="width: 500px; margin: 0 auto;">
