@@ -91,11 +91,12 @@
         }
 
 
-        var max_samples = 1; // Define your max_samples variable
-        var sample_count = 0;
+        var max_samples = 2; // Define your max_samples variable ideally --> 5
+        var sample_count = 0; // counter
 
         var test_stimuli_all= [];
 
+        // 
         for (var ctr = 0; ctr < toUsePhysioPaths_healthy.length && sample_count < max_samples; ctr ++){
             to_add_obj = {stimulus: toUsePhysioPaths_healthy[ctr].PhysioPath, 
                         ID: toUsePhysioPaths_healthy[ctr].PhysioPath,
@@ -104,13 +105,15 @@
             sample_count++;
         };
 
-        for (var ctr = 0; ctr < toUsePhysioPaths_unhealthy.length && sample_count < max_samples*2; ctr ++){
+        for (var ctr = 0; ctr < toUsePhysioPaths_unhealthy.length && sample_count < max_samples*2; ctr ++){ // ensures half healthy and half unhealthy 
             to_add_obj = {stimulus: toUsePhysioPaths_unhealthy[ctr].PhysioPath, 
                         ID: toUsePhysioPaths_unhealthy[ctr].PhysioPath,
                         };
             test_stimuli_all.push(to_add_obj);
             sample_count++;
         };
+
+        // TODO: ADD Generated and VEO datasets here to the test stimuli selection
 
 
         test_stimuli_all = jsPsych.randomization.shuffle(test_stimuli_all);
@@ -131,7 +134,7 @@
 
         
         
-        
+        /*
         var availNTNs =  [1, 2, 3, 4, 7, 9, 11, 12, 13, 14, 15, 16, 18, 19, 21, 22, 23, 24, 25, 30];    // Array.from({length: 45}, (_, i) => i + 1); // [1, 2, ..., 45]       
         console.log(availNTNs);
         console.log(availNTNs.length);
@@ -139,9 +142,10 @@
         // availNTNsShuffled = availNTNsShuffled.slice(0, 2);
         console.log(availNTNsShuffled);
 
-        /* Choose 4 NTNs for localization test */
+         Choose 4 NTNs for localization test 
         // var locNTSShuffled = jsPsych.randomization.shuffle(availNTNs);
         // var locNTSShuffled = locNTSShuffled.slice(0, 4);
+
         var locNTSShuffled = [1, 5, 7, 9];
         console.log(locNTSShuffled);
         var correctAnswers = ["Right", "Left", "Left", "Right"];
@@ -162,7 +166,7 @@
         };
 
         console.log(toUseNTNPaths);
-
+    */
     /*
         $.ajax({
             url: "questions/qn.csv",
@@ -290,30 +294,6 @@
 
         timeline.push(task_instruction_trial);
 
-
-        // for (var ctr = 0; ctr < task_instructions_stimuli.length; ctr ++){
-
-        //     var preload_img = {
-        //         type: jsPsychPreload,
-        //         Image: "img/" + task_instructions_imgs[ctr],
-        //         show_progress_bar: false
-        //     };
-
-        //     timeline.push(preload_img);
-
-        //     var temp_instructions_test = {
-        //         type: jsPsychHtmlButtonResponse,
-        //         stimulus: `
-        //         <p> ${task_instructions_stimuli[ctr]} </p>
-        //         <img src="img/${task_instructions_imgs[ctr]}" width = 60%>
-        //         `,
-        //         choices: ['Continue']
-        //     };
-
-        //     timeline.push(temp_instructions_test);
-
-        // }
-
         /* Final task instruction */
         var task_instructions_final = {
             type: jsPsychHtmlButtonResponse,
@@ -380,7 +360,7 @@ and has a text box for annotationg what you hear in the PCG (arrythmia, systolic
                         `;
                     },
                     labels: ["Healthy", "Pathological", "Unknown"],
-                    required: false,
+                    required: true,
                     name: function() {
                         return 'PCG_classification' + jsPsych.timelineVariable('displyTrialCTR');
                     }
@@ -388,7 +368,7 @@ and has a text box for annotationg what you hear in the PCG (arrythmia, systolic
                 {
                     prompt: `<p>How confident are you in your previous answer?</p>`,
                     labels: ["<b>1.</b> Not at all confident", "<b>2.</b> Slightly confident", "<b>3.</b> Moderately confident", "<b>4.</b> Very confident", "<b>5.</b> Extremely confident"],
-                    required: false,
+                    required: true,
                     name: function() {
                         return 'Classification_confidence' + jsPsych.timelineVariable('displyTrialCTR');
                     }
@@ -396,39 +376,27 @@ and has a text box for annotationg what you hear in the PCG (arrythmia, systolic
             ],
             on_load: function() {
                 // Wait a moment to ensure DOM is ready
-                setTimeout(function() {
-                    var audioPath = jsPsych.timelineVariable('stimulus');
-                    var audio = document.getElementById("audio");
-                    var progressBar = document.getElementById("audio-progress");
-                    var playButton = document.getElementById("play-button");
-                    var nextButton = document.querySelector("button.jspsych-btn");
+                var audioPath = jsPsych.timelineVariable('stimulus');
+                var audio = document.getElementById("audio");
+                var progressBar = document.getElementById("audio-progress");
+               
 
-                    audio.src = audioPath;
-                    audio.load();
+                audio.src = audioPath;
 
-                    // Disable Next initially
-                    nextButton.disabled = true;
+                document.getElementById("play-button").addEventListener("click", function() {
+                audio.play();
+                });
 
-                    // Play button
-                    playButton.addEventListener("click", function() {
-                        audio.play();
-                        playButton.disabled = true; // optional: prevent replay
-                    });
+                audio.addEventListener("timeupdate", function() {
+                var progress = (audio.currentTime / audio.duration) * 100;
+                progressBar.style.width = progress + "%";
+                });
 
-                    // Update progress bar
-                    audio.addEventListener("timeupdate", function() {
-                        if (audio.duration > 0) {
-                            var progress = (audio.currentTime / audio.duration) * 100;
-                            progressBar.style.width = progress + "%";
-                        }
-                    });
-
-                    // Enable Next when audio ends
-                    audio.addEventListener("ended", function() {
-                        progressBar.style.width = "100%";
-                        nextButton.disabled = false;
-                    });
-                }, 50);
+                audio.addEventListener("ended", function() {
+                progressBar.style.width = "0%";
+                });
+                    
+                        
             }
         };
 
@@ -488,52 +456,6 @@ and has a text box for annotationg what you hear in the PCG (arrythmia, systolic
                 });
             }
         };
-
-
-
-
-
-               // /* Phase 6 - Natrualness of the voices heard */
-        // var natRating_task = {
-        //     type: jsPsychSurveyMultiChoice,
-        //     questions: [{
-        //         prompt: 'Please rate the quality of the voices of the talkers.',
-        //         options: ['1 (Bad)', '2 (Poor)', '3 (Fair)', '4 (Good)', '5 (Excellent)'],
-        //         required: true,
-        //         name: function(){
-        //             var toReturn = 'NatRating_Qn_PTN_' + jsPsych.timelineVariable('NTN');
-        //             return toReturn;
-        //         }  
-        //     }],
-        //     on_finish: function(){
-        //         saveData(workerID, jsPsych.data.get().json());
-        //     }   
-        // }
-
-
-
-        /* Phase 3 - Likert Survey 
-        var likert_survey = {
-            type: jsPsychSurveyLikert,
-            questions: [{   prompt: "Which part was more <b>difficult</b> to follow?", 
-                            labels: ["<b>1</b>", "Somewhat <b>1</b>", "No difference", "Somewhat <b>2</b>", "<b>2</b>"], 
-                            required: true,
-                            name: function(){
-                                    var toReturn = 'DiffRating_Qn_NTN_' + jsPsych.timelineVariable('NTN');
-                                    return toReturn;
-                                    }}, 
-                        {   prompt: "Which part did you <b>prefer</b> listening to?", 
-                            labels: ["<b>1</b>", "Somewhat <b>1</b>", "No preference", "Somewhat <b>2</b>", "<b>2</b>"], 
-                            required: true,
-                            name: function(){
-                                    var toReturn = 'PrefRating_Qn_NTN_' + jsPsych.timelineVariable('NTN');
-                                    return toReturn;
-                                    }}
-                        ],
-            scale_width: 750
-        };*/
-
-
 
 
  
