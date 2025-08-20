@@ -37,32 +37,13 @@
             
         }
 
+        /* initialize jsPsych */
         var jsPsych = initJsPsych({
             show_progress_bar: true,
-            on_finish: function() {
-                // Grab jsPsych data
-                var dataJSON = jsPsych.data.get().json();
+            on_finish: function(){
+                saveDataToCSV("PCG_survey_data.csv");
 
-                // Send to Flask backend
-                fetch("/save", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        fileName: "PCG_" + Date.now(),
-                        filedata: dataJSON
-                    })
-                })
-                .then(response => response.json())
-                .then(result => {
-                    console.log("✅ Data saved:", result);
-                    alert("Thank you! Your responses have been saved.");
-                })
-                .catch(error => {
-                    console.error("❌ Error saving data:", error);
-                    alert("There was an error saving your responses.");
-                });
+                 //jsPsych.data.displayData();
             }
         });
 
@@ -111,7 +92,7 @@
         
 
 
-        var max_samples = 1; // Define your max_samples variable ideally --> 5
+        var max_samples = 5; // Define your max_samples variable ideally --> 5
         var sample_count = 0; // counter
 
         var test_stimuli_all= [];
@@ -398,7 +379,7 @@ and has a text box for annotationg what you hear in the PCG (arrythmia, systolic
         /* Phase 1 - Pre-loading */
         var preload = {
             type: jsPsychPreload,
-            audio: test_stimuli_all.map(t => t.stimulus),
+            video: jsPsych.timelineVariable('stimulus'),
             show_progress_bar: false
         };
 
